@@ -1,0 +1,192 @@
+{
+    "name": "pizza-trainee-2022",
+    "description": "order a pizza",
+    "blueprint_spec": {
+        "lanes": [
+            {
+                "id": "1",
+                "name": "the_only_lane",
+                "rule": [
+                    "fn",
+                    [
+                        "&",
+                        "args"
+                    ],
+                    true
+                ]
+            }
+        ],
+        "nodes": [
+            {
+                "id": "START-PROCESS",
+                "type": "Start",
+                "name": "Start node",
+                "parameters": {
+                    "input_schema": {}
+                },
+                "next": "ORDER-PIZZA",
+                "lane_id": "1"
+            },
+            {
+                "id": "ORDER-PIZZA",
+                "name": "Order a pizza",
+                "next": "TAKE-ORDER",
+                "type": "UserTask",
+                "lane_id": "1",
+                "parameters": {
+                    "action": "ORDER_PIZZA",
+                    "input": {
+                        "menu": {
+                            "$ref": "bag.menu-pizza"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "TAKE-ORDER",
+                "name": "Take orders from customers",
+                "next": "PREPARE-ORDER",
+                "type": "SystemTask",
+                "lane_id": "1",
+                "category": "HTTP",
+                "parameters": {
+                    "input": {},
+                    "request": {
+                        "url": "www.minhapizzaria/pedidos-clientes",
+                        "verb": "GET",
+                        "headers": {
+                            "ContentType": "application/json"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "PREPARE-ORDER",
+                "name": "Prepare a pizza",
+                "next": "UPDATE-ORDER",
+                "type": "UserTask",
+                "lane_id": "1",
+                "parameters": {
+                    "action": "PREPARE_PIZZA",
+                    "input": {
+                        "pizza": {
+                            "$ref": "bag.customer.pizza"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "UPDATE-ORDER",
+                "name": "Update status of the order",
+                "next": "RECEIVE-ORDER",
+                "type": "SystemTask",
+                "lane_id": "1",
+                "category": "HTTP",
+                "parameters": {
+                    "input": {
+                        "status": "ON ROUTE"
+                    },
+                    "request": {
+                        "url": "www.minhapizzaria/pedidos-clientes/status",
+                        "verb": "PATCH",
+                        "headers": {
+                            "ContentType": "application/json"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "RECEIVE-ORDER",
+                "name": "Receive a pizza",
+                "next": "IS-ORDER-OK",
+                "type": "UserTask",
+                "lane_id": "1",
+                "parameters": {
+                    "action": "RECEIVE_ORDER",
+                    "input": {
+                        "pizza": {
+                            "$ref": "bag.customer.pizza"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "IS-ORDER-OK",
+                "name": "Check if the order is ok",
+                "next": {
+                    "OK": "PRAISE",
+                    "NOT OK": "COMPLAIN",
+                    "default": "PRAISE"
+                },
+                "type": "Flow",
+                "lane_id": "1",
+                "parameters": {
+                    "input": {
+                        "decision": {
+                            "$ref": "result.receiveOrder"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "PRAISE",
+                "name": "Praise the restaurant",
+                "next": "END-WITH-PRAISE",
+                "type": "SystemTask",
+                "lane_id": "1",
+                "category": "HTTP",
+                "parameters": {
+                    "input": {
+                        "opinion": "PRAISE"
+                    },
+                    "request": {
+                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
+                        "verb": "POST",
+                        "headers": {
+                            "ContentType": "application/json"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "COMPLAIN",
+                "name": "Complain with restaurant",
+                "next": "END-WITH-COMPLAIN",
+                "type": "SystemTask",
+                "lane_id": "1",
+                "category": "HTTP",
+                "parameters": {
+                    "input": {
+                        "opinion": "COMPLAIN"
+                    },
+                    "request": {
+                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
+                        "verb": "POST",
+                        "headers": {
+                            "ContentType": "application/json"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "END-WITH-COMPLAIN",
+                "name": "END",
+                "next": null,
+                "type": "Finish",
+                "lane_id": "1"
+            },
+            {
+                "id": "END-WITH-PRAISE",
+                "name": "END",
+                "next": null,
+                "type": "Finish",
+                "lane_id": "1"
+            }
+        ],
+        "prepare": [],
+        "environment": {},
+        "requirements": [
+            "core"
+        ]
+    }
+}
