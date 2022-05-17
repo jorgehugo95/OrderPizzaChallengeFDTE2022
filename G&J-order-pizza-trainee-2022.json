@@ -4,8 +4,32 @@
     "blueprint_spec": {
         "lanes": [
             {
-                "id": "1",
-                "name": "the_only_lane",
+                "id": "USUARIO",
+                "name": "Etapas do Usuario",
+                "rule": [
+                    "fn",
+                    [
+                        "&",
+                        "args"
+                    ],
+                    true
+                ]
+            },
+            {
+                "id": "Restaurante",
+                "name": "Etapas do Restaurante",
+                "rule": [
+                    "fn",
+                    [
+                        "&",
+                        "args"
+                    ],
+                    true
+                ]
+            },
+            {
+                "id": "Delivery",
+                "name": "Etapa do Delivery",
                 "rule": [
                     "fn",
                     [
@@ -30,56 +54,32 @@
             {
                 "id": "Entrar-Site",
                 "name": "Entrar no Site",
-                "next": "Tem-Cadastro?",
-                "type": "UserTask",
+                "next": "Tem-Cadastro",
                 "lane_id": "Usuário",
-                "category": "HTTP",
+                "type": "UserTask",
                 "parameters": {
-                    "action": "Checar-Cadastro",
-                    "input": {
-                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
-                        "verb": "POST",
-                        "headers": {
-                            "ContentType": "application/json"
-                        }
-                    }
+                  "input": {
+                      "http": {"$ref":"bag.http"},
+                      "Cadastro":{"$ref":"bag.cadastro"}
+                  },
+                  "action": "Entrar_site_e_Checar_Cadastro",
+                  "activity_manager": "commit"
                 }
-            },
+            },    
             {
-                "id": "Check-Cadastro",
+                "id": "Tem-Cadastro",
                 "name": "Check se o usuário tem cadastro",
+                "type": "Flow",
+                "lane_id": "Usuário",
                 "next": {
                     "OK": "Login",
                     "NOT OK": "Realizar-Cadastro",
                     "default": "Login"
                 },
-                "type": "Flow",
-                "lane_id": "Usuário",
                 "parameters": {
                     "input": {
                         "decision": {
-                            "$ref": "result.entrarSite"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Login",
-                "name": "Logar no Resteurante",
-                "next": "Escolher-Produtos",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "category": "HTTP",
-                "parameters": {
-                    "input": {
-                        "e-mail": "",
-                        "senha": ""
-                    },
-                    "request": {
-                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
-                        "verb": "POST",
-                        "headers": {
-                            "ContentType": "application/json"
+                            "$ref": "bag.cadastro"
                         }
                     }
                 }
@@ -87,23 +87,35 @@
             {
                 "id": "Realizar-Cadastro",
                 "name": "Fazer o cadastro",
-                "next": "Escolher-Produtos",
+                "next": "Login",
                 "type": "UserTask",
                 "lane_id": "Usuário",
-                "category": "HTTP",
                 "parameters": {
                     "input": {
                         "e-mail": "",
                         "Senha": "",
-                        "Cartão": ""
+                        "CPF": "",
+                        "Número Cartao": "",
+                        "Vencimento Cartao": "",
+                        "Numero de Seguranca": ""
                     },
-                    "request": {
-                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
-                        "verb": "POST",
-                        "headers": {
-                            "ContentType": "application/json"
-                        }
-                    }
+                    "action": "Cadastro",
+                    "activity_manager":"commit"
+                }
+            },
+            {
+                "id": "Login",
+                "name": "Logar no Site",
+                "next": "Escolher-Produtos",
+                "type": "UserTask",
+                "lane_id": "Usuário",
+                "parameters": {
+                    "input": {
+                        "e-mail": "",
+                        "senha": ""
+                    },
+                    "action": "Logar_Site",
+                    "activity_manager":"commit"
                 }
             },
             {
@@ -111,12 +123,20 @@
                 "name": "Escolher produtos",
                 "next": "Checar-Desconto",
                 "type": "UserTask",
-                "lane_id": "Usuário",
+                "lane_id": "Usuario",
+                "category": "HTTP",
                 "parameters": {
-                    "action": "ORDER_PIZZA",
+                    "action": "Pedir_Pizza",
                     "input": {
                         "menu": {
                             "$ref": "bag.menu-pizza"
+                        }
+                    },
+                    "request": {
+                        "url": "www.minhapizzaria/cardapio",
+                        "verb": "GET",
+                        "headers": {
+                            "ContentType": "application/json"
                         }
                     }
                 }
@@ -124,13 +144,28 @@
             {
                 "id": "Checar-Desconto",
                 "name": "Checar se existe desconto",
+                "next": "Tem-Desconto",
+                "type": "UserTask",
+                "category":"SetToBag",
+                "lane_id": "Usuário",
+                "parameters": {
+                    "input": {
+                        "RegistrarDescontos": {
+                            "$ref": "result.desconto"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "Tem-Desconto",
+                "name": "Verificar Desconto",
+                "type": "Flow",
+                "lane_id": "Usuário",
                 "next": {
-                    "OK": "Add-Desconto",
+                    "OK": "Adicionar-Desconto",
                     "NOT OK": "Solicitar-Pedido",
                     "default": "Solicitar-Pedido"
                 },
-                "type": "Flow",
-                "lane_id": "Usuário",
                 "parameters": {
                     "input": {
                         "decision": {
@@ -140,10 +175,11 @@
                 }
             },
             {
-                "id": "Add-Desconto",
+                "id": "Adicionar-Desconto",
                 "name": "Adicionar Desconto",
                 "next": "Solicitar-Pedido",
-                "type": "HTTP",
+                "type": "SystemTask",
+                "category":"HTTP",
                 "lane_id": "Usuário",
                 "parameters": {
                     "request": {
@@ -163,25 +199,45 @@
                 "lane_id": "Usuário",
                 "parameters": {
                     "action": "Solicitar_Pedido",
-                    "input": {
-                        "Solicitar": {}
+                    "input": {},
+                    "request": {
+                        "url": "www.minhapizzaria/solicitar-pedido",
+                        "verb": "GET",
+                        "headers": {
+                        "ContentType": "application/json"
+                        }
                     }
                 }
             },
             {
                 "id": "Revisar-Pedido",
                 "name": "Revisar todos os itens",
+                "next": "Pedido-OK",
+                "type": "UserTask",
+                "category":"SetToBag",
+                "lane_id": "Usuário",
+                "parameters": {
+                    "input": {
+                        "decision": {
+                            "$ref": "result.revisarPedido"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "Pedido-OK",
+                "name": "Check se pedido está ok",
+                "type": "Flow",
+                "lane_id": "Usuário",
                 "next": {
                     "OK": "Escolher-Forma-Pagamento",
                     "NOT OK": "Escolher-Produtos",
                     "default": "Escolher-Forma-Pagamento"
                 },
-                "type": "Flow",
-                "lane_id": "Usuário",
                 "parameters": {
                     "input": {
                         "decision": {
-                            "$ref": "result.solicitarPedido"
+                            "$ref": "result.revisarPedido"
                         }
                     }
                 }
@@ -193,7 +249,11 @@
                 "type": "UserTask",
                 "lane_id": "Usuário",
                 "parameters": {
-                    "action": "Esolher_Forma_Pagamento"
+                    "input": {
+                        "Forma_Pagamento":""
+                    },
+                    "action": "Esolher_Forma_Pagamento",
+                    "activity_manager":"commit"
                 }
             },
             {
@@ -201,53 +261,120 @@
                 "name": "Confirmar Solicitação de Pedido",
                 "next": "Receber-Pedido",
                 "type": "UserTask",
+                "category":"HTTP",
                 "lane_id": "Usuário",
                 "parameters": {
-                    "action": "Confirmar_Solicitação"
+                    "input": {},
+                    "action": "Confirmar_Solicitação",
+                    "request": {
+                        "url": "www.minhapizzaria/confirmar-pedido",
+                        "verb": "POST",
+                        "headers": {
+                            "ContentType": "application/json"
+                        }
+                    }
                 }
+
             },
             {
                 "id": "Receber-Pedido",
                 "name": "Receber Pedido",
                 "next": "Checar-Disponibilidade",
                 "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "lane_id":"Restaurante",
+                "category": "HTTP",
+                "parameters": {
+                    "input": {},
+                    "request": {
+                        "url": "www.minhapizzaria/pedidos-clientes",
+                        "verb": "GET",
+                        "headers": {
+                            "ContentType": "application/json"
+                        }
+                    }
+                }
             },
             {
                 "id": "Checar-Disponibilidade",
                 "name": "Checar Disponibilidade",
                 "next": "Itens-Disponiveis",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "type": "UserTask",
+                "category":"SetToBag",
+                "lane_id":"Restaurante",
+                "parameters":{
+                    "action":"Checar_Disponibilidade",
+                    "activity_manager":"commit",
+                    "input": {
+                        "decision": {
+                            "$ref": "result.disponibilidade"
+                        }
+                    }
+                }
             },
             {
                 "id": "Itens-Disponiveis",
                 "name": "Itens de pedido disponíveis?",
+                "lane_id":"Restaurante",
+                "type": "Flow",
                 "next":  {
                     "OK": "Aceitar-Pedido",
                     "NOT OK": "Falar-Cliente",
                     "default": "Aceitar-Pedido"
                 },
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "parameters": {
+                    "input": {
+                        "decision": {
+                            "$ref": "result.disponibilidade"
+                        }
+                    }
+                }
             },
             {
-                "id": "Falar-Cliente",
-                "name": "Falar sobre pedido em falta",
-                "next": "Solicitar-Novo-Pedido-1",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "id": "Avisar-Solicitar-Novo-Pedido",
+                "name": "Avisar sobre pedido em falta e solicitar novo pedido",
+                "next": "Pedido-Novo",
+                "type": "UserTask",
+                "category":"SetToBag",
+                "lane_id":"Restaurante",
+                "parameters":{
+                    "action":"Avisar_Pedido_em_Falta_Solcitar_Novo_Pedido",
+                    "input":{
+                        "decision":{"$ref":"bag.novoPedidoPorFalta"}
+                    }
+                }
             },
             {
-                "id": "Solicitar-Novo-Pedido-1",
+                "id": "Pedido-Novo",
                 "name": "Nova solicitação de pedido",
+                "type": "Flow",
+                "lane_id":"Restaurante",
                 "next": {
                     "OK": "Escolher-Produtos",
-                    "NOT OK": "Finalizar-Sem-Pedido",
+                    "NOT OK": "Cancelar-Pedido",
                     "default": "Escolher-Produtos"
                 },
+                "parameters": {
+                    "input": {
+                        "decision": {
+                            "$ref": "result.novoPedidoPorFalta"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "Cancelar-Pedido",
+                "name": "Cancelar Pedido Aberto",
+                "next": "Finalizar-Sem-Pedido",
                 "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "category":"HTTP",
+                "lane_id":"Restaurante",
+                "parameters":{
+                    "action":"Cancelar_Pedido",
+                    "activity_manager":"commit",
+                    "input":{
+                        "Cancelar_Pedido":"Cancelar"
+                    }
+                }
             },
             {
                 "id": "Finalizar-Sem-Pedido",
@@ -261,25 +388,67 @@
                 "name": "Aceitar pedido do cliente",
                 "next": "Preparar-Pedido",
                 "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "category":"HTTP",
+                "lane_id":"Restaurante",
+                "parameters": {
+                    "action": "Aceitar_Pedido",
+                    "input": {
+                        "Pedido": "Aceito"
+                    },
+                    "request":{
+                        "url":"www.minhapizzaria/pedidos-clientes",
+                        "verb":"POST",
+                        "headers": {
+                            "ContentType": "application/json"
+                        }
+                    }
+                }
             },
             {
-                "id": "Organizar-Pedido",
-                "name": "Organizar o Pedido para entrega",
+                "id": "Preparar-Pedido",
+                "name": "Preparar o Pedido",
+                "next": "Organizar-Revisar-Pedido",
+                "type": "UserTask",
+                "lane_id":"Restaurante",
+                "parameters": {
+                    "action": "Preparar_Pizza",
+                    "input": {
+                        "pizza": {
+                            "$ref": "bag.customer.pizza"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "Organizar-Revisar-Pedido",
+                "name": "Organizar e Revisar o Pedido para entrega",
                 "next": "Itens-OK",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "type": "UserTask",
+                "category":"SetToBag",
+                "lane_id":"Restaurante",
+                "parameters":{
+                    "action":"Organizar_Pedido_e_Revisar",
+                    "activity_manager":"commit",
+                    "input":{
+                        "decision":{"$ref":"result.revisarItens"}
+                    }
+                }
             },
             {
                 "id": "Itens-OK",
                 "name": "Os itens estao ok?",
+                "type": "Flow",
+                "lane_id":"Restaurante",
                 "next": {
                     "OK": "Atualizar-Pedido",
                     "NOT OK": "Preparar-Pedido",
                     "default": "Atualizar-Pedido"
                 },
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
+                "parameters":{
+                    "input":{
+                        "decision":{"$ref":"result.revisarItens"}
+                    }
+                }                
             },
             {
                 "id": "Atualizar-Enviar-Pedido",
@@ -324,7 +493,34 @@
                 },
                 "type": "UserTask",
                 "lane_id":"Delivery"
+            },
+            {
+                "id": "Contagem-Contato-Cliente",
+                "name": "Contato mais 1",
+                "next": "",
+                "type": "SystemTask",
+                "lane_id":"Delivery"
+            },
+            {
+                "id": "Contagem-Maior-2",
+                "name": "Numero de contatos superior a 2",
+                "next": {
+                    "OK": "Finalizar-Sem-Entrega",
+                "NOT OK": "Contato-Procurar",
+                "default": "Contato-Procurar"
+                },
+                "type": "UserTask",
+                "lane_id":"Delivery"
+            },
+            {
+                "id": "Finalizar-Sem-Entrega",
+                "name": "Finalizar pedido sem entrega",
+                "next": null,
+                "type": "Finish",
+                "lane_id": "Delivery"
             }
+            
+            
             
             
 
