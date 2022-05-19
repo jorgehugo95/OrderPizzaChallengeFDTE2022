@@ -1,11 +1,11 @@
 {
-    "name": "Gabriel_A-Jorge_H-pizza-trainee-2022",
+    "name": "pizza-trainee-2022",
     "description": "order a pizza",
     "blueprint_spec": {
         "lanes": [
             {
-                "id": "1",
-                "name": "the_only_lane",
+                "id": ["Usuario","Restaurante","Delivery"],
+                "name": ["Usuário","Restaurante","Delivery"],
                 "rule": [
                     "fn",
                     [
@@ -16,322 +16,361 @@
                 ]
             }
         ],
-        "nodes": [
-            {
-                "id": "START-PROCESS",
-                "type": "Start",
-                "name": "Start node",
-                "parameters": {
-                    "input_schema": {}
-                },
-                "next": "Entrar-Site",
-                "lane_id": "Usuário"
-            },
-            {
-                "id": "Entrar-Site",
-                "name": "Entrar no Site",
-                "next": "Tem-Cadastro?",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "category": "HTTP",
-                "parameters": {
-                    "action": "Checar-Cadastro",
-                    "input": {
-                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
-                        "verb": "POST",
-                        "headers": {
-                            "ContentType": "application/json"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Check-Cadastro",
-                "name": "Check se o usuário tem cadastro",
-                "next": {
-                    "OK": "Login",
-                    "NOT OK": "Realizar-Cadastro",
-                    "default": "Login"
-                },
-                "type": "Flow",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "input": {
-                        "decision": {
-                            "$ref": "result.entrarSite"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Login",
-                "name": "Logar no Resteurante",
-                "next": "Escolher-Produtos",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "category": "HTTP",
-                "parameters": {
-                    "input": {
-                        "e-mail": "",
-                        "senha": ""
-                    },
-                    "request": {
-                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
-                        "verb": "POST",
-                        "headers": {
-                            "ContentType": "application/json"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Realizar-Cadastro",
-                "name": "Fazer o cadastro",
-                "next": "Escolher-Produtos",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "category": "HTTP",
-                "parameters": {
-                    "input": {
-                        "e-mail": "",
-                        "Senha": "",
-                        "Cartão": ""
-                    },
-                    "request": {
-                        "url": "www.minhapizzaria/pedidos-clientes/avaliacao-cliente",
-                        "verb": "POST",
-                        "headers": {
-                            "ContentType": "application/json"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Escolher-Produtos",
-                "name": "Escolher produtos",
-                "next": "Checar-Desconto",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "action": "ORDER_PIZZA",
-                    "input": {
-                        "menu": {
-                            "$ref": "bag.menu-pizza"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Checar-Desconto",
-                "name": "Checar se existe desconto",
-                "next": {
-                    "OK": "Add-Desconto",
-                    "NOT OK": "Solicitar-Pedido",
-                    "default": "Solicitar-Pedido"
-                },
-                "type": "Flow",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "input": {
-                        "decision": {
-                            "$ref": "result.desconto"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Add-Desconto",
-                "name": "Adicionar Desconto",
-                "next": "Solicitar-Pedido",
-                "type": "HTTP",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "request": {
-                        "url": "www.minhapizzaria/pedidos-clientes/desconto",
-                        "verb": "GET",
-                        "headers": {
-                            "ContentType": "application/json"
-                        }
-                    }   
-                }
-            },
-            {
-                "id": "Solicitar-Pedido",
-                "name": "Fazer solicitação",
-                "next": "Revisar-Pedido",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "action": "Solicitar_Pedido",
-                    "input": {
-                        "Solicitar": {}
-                    }
-                }
-            },
-            {
-                "id": "Revisar-Pedido",
-                "name": "Revisar todos os itens",
-                "next": {
-                    "OK": "Escolher-Forma-Pagamento",
-                    "NOT OK": "Escolher-Produtos",
-                    "default": "Escolher-Forma-Pagamento"
-                },
-                "type": "Flow",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "input": {
-                        "decision": {
-                            "$ref": "result.solicitarPedido"
-                        }
-                    }
-                }
-            },
-            {
-                "id": "Escolher-Forma-Pagamento",
-                "name": "Escolher Forma de Pagamento",
-                "next": "Confirmar-Solicitação",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "action": "Esolher_Forma_Pagamento"
-                }
-            },
-            {
-                "id": "Confirmar-Solicitação",
-                "name": "Confirmar Solicitação de Pedido",
-                "next": "Receber-Pedido",
-                "type": "UserTask",
-                "lane_id": "Usuário",
-                "parameters": {
-                    "action": "Confirmar_Solicitação"
-                }
-            },
-            {
-                "id": "Receber-Pedido",
-                "name": "Receber Pedido",
-                "next": "Checar-Disponibilidade",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Checar-Disponibilidade",
-                "name": "Checar Disponibilidade",
-                "next": "Itens-Disponiveis",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Itens-Disponiveis",
-                "name": "Itens de pedido disponíveis?",
-                "next":  {
-                    "OK": "Aceitar-Pedido",
-                    "NOT OK": "Falar-Cliente",
-                    "default": "Aceitar-Pedido"
-                },
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Falar-Cliente",
-                "name": "Falar sobre pedido em falta",
-                "next": "Solicitar-Novo-Pedido-1",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Solicitar-Novo-Pedido-1",
-                "name": "Nova solicitação de pedido",
-                "next": {
-                    "OK": "Escolher-Produtos",
-                    "NOT OK": "Finalizar-Sem-Pedido",
-                    "default": "Escolher-Produtos"
-                },
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Finalizar-Sem-Pedido",
-                "name": "Finalizar processo sem pedido",
-                "next": null,
-                "type": "Finish",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Aceitar-Pedido",
-                "name": "Aceitar pedido do cliente",
-                "next": "Preparar-Pedido",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Organizar-Pedido",
-                "name": "Organizar o Pedido para entrega",
-                "next": "Itens-OK",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Itens-OK",
-                "name": "Os itens estao ok?",
-                "next": {
-                    "OK": "Atualizar-Pedido",
-                    "NOT OK": "Preparar-Pedido",
-                    "default": "Atualizar-Pedido"
-                },
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Atualizar-Enviar-Pedido",
-                "name": "Atualizar-Enviar-Pedido",
-                "next": "Confirmar-Cliente",
-                "type": "SystemTask",
-                "lane_id":"Restaurante"
-            },
-            {
-                "id": "Encontrar-Cliente",
-                "name": "Confirmar cliente certo",
-                "next": "Cliente-OK",
-                "type": "UserTask",
-                "lane_id":"Delivery"
-            },
-            {
-                "id": "Cliente-OK",
-                "name": "Confirmar se cliente esta OK",
-                "next": {
-                    "OK": "Entregar-Pedido",
-                    "NOT OK": "Entrar-em-Contato",
-                    "default": "Entregar-Pedido"
-                },
-                "type": "UserTask",
-                "lane_id":"Delivery"
-            },
-            {
-                "id": "Contato-Procurar",
-                "name": "Pedir a localizacao e encontrar cliente",
-                "next": "",
-                "type": "UserTask",
-                "lane_id":"Delivery"
-            },
-            {
-                "id": "Cliente-Encontrado",
-                "name": "Encontrou-se o cliente",
-                "next": {
-                    "OK": "Entregar-Pedido",
-                "NOT OK": "Contagem-Contado-Cliente",
-                "default": "Entregar-Pedido"
 
-                },
-                "type": "UserTask",
-                "lane_id":"Delivery"
+        "nodes":
+        
+        [{
+            "id": "Inicio",
+            "name": "Início do Processo",
+            "next": "Cadastro/Login",
+            "type": "start",
+            "lane_id": "Usuario",
+            "parameters": {
+                "input_schema": {}
             }
-            
-            
-
-
-
-        ]
+        },
+        {
+            "id": "Cadastro/Login",
+            "name": "Cadastro/Login",
+            "next": "Simular_Pedido",
+            "lane_id": "Usuario",
+            "type": "SystemTask",
+            "category": "http",
+            "parameters": {
+                "input": {},
+                "request": {
+                    "url": "www.minhapizzaria.com.br/cadastro-login",
+                    "verb": "GET",
+                    "headers": {}
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Simular-Pedido",
+            "name": "Iniciar uma simulação de Pedido",
+            "next": "Escolher_Produtos",
+            "lane_id": "Usuario",
+            "type": "UserTask",
+            "parameters": {
+                "action": "SIMULAR_PEDIDO",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Escolher-Produtos",
+            "name": "Escolha dos Produtos que integrarão o pedido",
+            "next": "Confirmarcao_Pedido",
+            "lane_id": "Usuario",
+            "type": "UserTask",
+            "parameters": {
+                "action": "ESCOLHER_PRODUTOS",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Confirmacao_Pedido",
+            "name": "Confirmar a escolha dos produtos selecionados",
+            "next": {
+                "OK": "Add_Desconto",
+                "NOK": "Escolher_Produtos",
+                "default": "Opção Inválida"
+            },
+            "type": "flow",
+            "lane_id": "Usuario",
+            "parameters": {
+                "input": {
+                    "key": "Pedido Válido"
+                }
+            }
+        },
+        {
+            "id": "Add-Desconto",
+            "name": "Adicionar Desconto",
+            "next": "Forma_Pagamento",
+            "lane_id": "Usuario",
+            "type": "UserTask",
+            "parameters": {
+                "action": "ADD_DESCONTO",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Forma_Pagamento",
+            "name": "Selecionar a Forma de Pagamento",
+            "next": {
+                "Online": "Aceitar-Pedido",
+                "Entrega": "Aceitar-Pedido"
+            },
+            "type": "flow",
+            "lane_id": "Usuario",
+            "parameters": {
+                "input": {
+                    "key": "Aguardando confirmação do Restaurante"
+                }
+            }
+        },
+        {
+            "id": "Aceitar-Pedido",
+            "name": "Confirmar Preparo do Pedido",
+            "next": "Pedido-Recebido",
+            "lane_id": "Restaurante",
+            "type": "SystemTask",
+            "category": "setToBag",
+            "parameters": {
+                "input": {}
+            }
+        },
+        {
+            "id": "Pedido-Recebido",
+            "type": "SystemTask",
+            "category": "startProcess",
+            "name": "Restaurante inicia o preparo do Pedido",
+            "parameters": {
+                "workflow_name": "Pedido_Recebido",
+                "input": {},
+                "actor_data": {"$ref": "actor_data"
+                }
+            },
+            "next": "Preparar-Pedido",
+            "lane_id": "Restaurante"
+        },
+        {
+            "id": "Preparar-Pedido",
+            "name": "Fazer a pizza e separar produtos do pedido do cliente",
+            "next": "Organizar-Pedido",
+            "lane_id": "Restaurante",
+            "type": "UserTask",
+            "parameters": {
+                "action": "Preparar_Pedido",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Organizar-Pedido",
+            "name": "Organizar os produtos de acordo com o pedido do cliente",
+            "next": "Checar-Pedido",
+            "lane_id": "Restaurante",
+            "type": "UserTask",
+            "parameters": {
+                "action": "ORGANIZAR_PEDIDO",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Checar-Pedido",
+            "name": "Checar se o pedido do cliente está correto",
+            "next": {
+                "OK": "Pedido-Pronto",
+                "NOK": "Organizar-Pedido",
+                "default": "Opção Inválida"
+            },
+            "type": "flow",
+            "lane_id": "Restaurante",
+            "parameters": {
+                "input": {
+                    "key": "Se o pedido estiver pronto, será enviado para entrega"
+                }
+            }
+        },
+        {
+            "id": "Pedido-Pronto",
+            "name": "Confirmar o envio do Pedido",
+            "next": "Enviar-Pedido",
+            "lane_id": "Restaurante",
+            "type": "SystemTask",
+            "category": "setToBag",
+            "parameters": {
+                "input": {}
+            }
+        },
+        {
+            "id": "Enviar-Pedido",
+            "type": "SystemTask",
+            "category": "startProcess",
+            "name": "Enviar pedido para endereço que consta no cadastro",
+            "parameters": {
+                "workflow_name": "Enviar_Pedido",
+                "input": {},
+                "actor_data": {"$ref": "actor_data"
+                }
+            },
+            "next": "Chegar-Destino",
+            "lane_id": "Delivery"
+        },
+        {
+            "id": "Chegar-Destino",
+            "name": "Chegar ao destino indicado pelo cliente no cadastro",
+            "next": "Contatar-Cliente",
+            "lane_id": "Delivery",
+            "type": "UserTask",
+            "parameters": {
+                "action": "CHEGAR_DESTINO",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Contatar-Cliente",
+            "name": "Entrar em contato com o cliente",
+            "next": {
+                "OK": "Checar-Comanda",
+                "NOK": "Cliente-Ausente",
+                "default": "Opção Inválida"
+            },
+            "type": "flow",
+            "lane_id": "Delivery",
+            "parameters": {
+                "input": {
+                    "key": "Serão feitas até 5 tentativas de contato com o cliente"
+                }
+            }
+        },
+        {
+            "id": "Sem-Resposta",
+            "name": "5 tentativas de contato com o cliente sem resposta",
+            "next": "Finalizar-Sem-Entrega",
+            "lane_id": "Delivery",
+            "type": "UserTask",
+            "parameters": {
+                "action": "FINALIZAR_CONTATO",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Finalizar-Sem-Entrega",
+            "name": "Pedido finalizado sem entrega",
+            "type": "Finish",
+            "lane_id": "Delivery",
+            "next": null
+        },
+        {
+            "id": "Checar-Comanda",
+            "name": "Fazer a conferência do pedido juntamente com o cliente",
+            "next": {
+                "OK": "Pagamento",
+                "NOK": "Ligar-Restaurante",
+                "default": "Opção Inválida"
+            },
+            "type": "flow",
+            "lane_id": "Delivery",
+            "parameters": {
+                "input": {
+                    "key": "Checar pedido para avaliar eficiência do sistema"
+                }
+            }
+        },
+        {
+            "id": "Ligar-Restaurante",
+            "name": "Ligar para o Restaurante",
+            "next": "Negociar-Cliente",
+            "lane_id": "Delivery",
+            "type": "UserTask",
+            "parameters": {
+                "action": "LIGAR_RESTAURANTE",
+                "input": {},
+                "activity_manager": "commit or notify",
+                "activity_schema": {
+                    "$ref": "activity_schema"
+                }
+            },
+            "result_schema": {}
+        },
+        {
+            "id": "Negociar-Cliente",
+            "name": "Negociar solução com o cliente",
+            "type": "Finish",
+            "lane_id": "Delivery",
+            "next": null
+        },
+        {
+            "id": "Pagamento",
+            "name": "Conferir método de pagamento solicitado pelo cliente",
+            "next": {
+                "Online": "Avaliacao",
+                "Entrega": "Pagamento-Entrega",
+                "default": "Opção Inválida"
+            },
+            "type": "flow",
+            "lane_id": "Delivery",
+            "parameters": {
+                "input": {
+                    "key": "Revisar Forma_Pagamento"
+                }
+            }
+        },
+        {
+            "id": "Pagamento-Entrega",
+            "name": "Cliente solicitou o pagamento no ato da Entrega do Pedido",
+            "next": {
+                "OK": "Avaliacao",
+                "NOK": "Ligar-Restaurante",
+                "default": "Opção Inválida"
+            },
+            "type": "flow",
+            "lane_id": "Delivery",
+            "parameters": {
+                "input": {
+                    "key": "Efetuar pagamento na entrega do pedido"
+                }
+            }
+        },
+        {
+            "id": "Avaliacao",
+            "name": "Solicitar avaliação da experiência ao cliente",
+            "next": {
+                "Sim": "Pedido-Entregue",
+                "Não": "Pedido-Entregue",
+                "default": "Opção Inválida"
+            },
+            "type": "flow",
+            "lane_id": "Delivery",
+            "parameters": {
+                "input": {
+                    "key": "Solicitar Avaliação do Cliente"
+                }
+            }
+        },
+        {
+            "id": "Pedido-Entregue",
+            "name": "Pedido Entregue com Sucesso",
+            "type": "Finish",
+            "lane_id": "Delivery",
+            "next": null
+        }]
     }
-
-
 }
